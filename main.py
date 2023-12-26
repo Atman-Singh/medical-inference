@@ -7,7 +7,6 @@ import colors
 
 
 def main():
-
     win = tk.Tk()
     win.state('zoomed')
 
@@ -17,8 +16,8 @@ def main():
     entry = ctk.CTkEntry(master=win, width=1000, height=50, corner_radius=10, fg_color=colors.hover, text_color=colors.entry_text, font=("Lato", 20))
     entry.place(relx=0.5, rely=0.28, anchor=tk.CENTER)
 
-    response_label = ctk.CTkLabel(master=win, text='', text_color=colors.text, font=("Lato", 45), wraplength=1000)
-    response_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+    response_label = ctk.CTkLabel(master=win, text='', text_color=colors.text, font=("Lato", 25), wraplength=700)
+    response_label.place(relx=0.5, rely=0.4, anchor=tk.N)
 
     get_response_button = create_button(win, "Get Response", 100, 60, command=lambda: display_response(response_label, entry))
     get_response_button.place(relx=0.5, rely=0.35, anchor=tk.CENTER)
@@ -41,19 +40,29 @@ def create_button(self, text, width, height, command):
 
 
 def display_response(label, entry):
-    label.configure(text=get_response(entry.get()), justify='center')
+    response = get_response(entry.get())
+    print(response)
+    label.configure(text=response, justify='center')
 
 
 def get_response(question):
-    data = {"inputs": question}
+    prompt = "Answer the following question in English and in a 100 word paragraph. " + question
+    print(prompt)
+    data = {
+        "inputs": prompt,
+        "parameters": {
+            "do_sample": True,
+            "top_p": 0.6,
+            "temperature": 0.9,
+            "top_k": 50,
+            "max_new_tokens": 512,
+            "stop": ["</s>"]
+        }
+    }
+
     data_json = json.dumps(data)
     output = requests.post(url, data=data_json)
-    for output in output.json():
-        return output['generated_text'][len(question) + 1:]
-
-
-def remove_question(question, output):
-    return output[len(question)+1:]
+    return output.json()[0]['generated_text'][len(prompt)+1:]
 
 
 if __name__ == '__main__':
